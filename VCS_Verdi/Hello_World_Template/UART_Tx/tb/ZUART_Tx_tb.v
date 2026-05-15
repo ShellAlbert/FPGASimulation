@@ -3,14 +3,24 @@
 
 module ZUART_Tx_tb;
 
+//Dump FSDB file for Verdi.
 initial begin
     $fsdbDumpfile("My.fsdb");
-    $fsdbDumpvars(0,"ZUART_Tx");
+    //$fsdbDumpvars(0,"ZUART_Tx_tb","+all");
+    $fsdbDumpvars(0,"ZUART_Tx_tb.myUART_Tx","+all");
 end
 
+//Two methods to generate clock.
 reg clk;
+//Method 1.
 initial clk=0;
 always #10 clk=~clk;
+
+//Method 2.
+// initial begin
+//     clk=0;
+//     forever #5 clk=~clk;
+// end
 
 reg rst_n;
 initial begin
@@ -54,6 +64,48 @@ else begin
             $display("simulation ends here: %t\n",$time);
             $finish;
         end
+    endcase
+end
+
+//multiplication testing.
+integer fd;
+initial begin
+    fd=$fopen("mydata.dat","r");
+    if(fd==0) begin
+        $display("can't open mydata.dat,quit.\n");
+        $finish;
+    end
+end
+
+reg [7:0] adc1;
+reg [7:0] adc2;
+reg [15:0] adc_multiple;
+reg [7:0] cntFSM2;
+always @(posedge clk or negedge rst_n)
+if(!rst_n) begin
+    adc1<=0; adc2<=0; cntFSM2<=0; 
+end
+else begin
+    case(cntFSM2) 
+    0: //check if reaches end of file.
+        if($feof(fd)) begin cntFSM2<=4; end
+        else begin cntFSM2<=cntFSM2+1; end
+    1: //read from file.
+        //xx xx 
+        //xx xx 
+        //xx xx
+        begin $fscanf(fd,"%h %h\n",adc1,adc2); adc_multiple<=0; cntFSM2<=cntFSM2+1; end
+    2:
+        begin adc_multiple<=adc1*adc2; cntFSM2<=cntFSM2+1; end
+    3:
+        begin 
+            $display("%d * %d = %d\n",adc1,adc2,adc_multiple);
+            cntFSM2<=cntFSM2-3;
+        end
+    4:
+        begin $fclose(fd); $display("reaches end of file.\n"); cntFSM2<=cntFSM2+1; end
+    5:
+        begin cntFSM2<=cntFSM2; end
     endcase
 end
 // initial begin 
