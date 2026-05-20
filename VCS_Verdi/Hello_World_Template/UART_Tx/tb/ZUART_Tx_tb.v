@@ -6,8 +6,8 @@ module ZUART_Tx_tb;
 //Dump FSDB file for Verdi.
 initial begin
     $fsdbDumpfile("My.fsdb");
-    //$fsdbDumpvars(0,"ZUART_Tx_tb","+all");
-    $fsdbDumpvars(0,"ZUART_Tx_tb.myUART_Tx","+all");
+    $fsdbDumpvars(0,"ZUART_Tx_tb","+all");
+    //$fsdbDumpvars(0,"ZUART_Tx_tb.myUART_Tx","+all");
 end
 
 //Two methods to generate clock.
@@ -46,26 +46,68 @@ ZUART_Tx #(.Freq_divider(12)) myUART_Tx
 
 //update tx data after each done.
 reg [7:0] cntFSM;
+reg [15:0] cntFinish;
 always @(posedge clk or negedge rst_n)
 if(!rst_n) begin
     cntFSM<=0; 
-    tx_data<=8'h19;
+    tx_data<=8'h26;
+    cntFinish<=0; 
 end
 else begin
     case(cntFSM)
     0: 
-        if(tx_done) begin tx_data<=8'h87; cntFSM<=cntFSM+1; end
+        if(tx_done) begin tx_data<=8'h20; cntFSM<=cntFSM+1; end
     1: 
+        if(tx_done) begin tx_data<=8'h19; cntFSM<=cntFSM+1; end
+    2: 
+        if(tx_done) begin tx_data<=8'h87; cntFSM<=cntFSM+1; end
+    3: 
         if(tx_done) begin tx_data<=8'h09; cntFSM<=cntFSM+1; end
-    2:
+    4:
         if(tx_done) begin tx_data<=8'h01; cntFSM<=cntFSM+1; end
-    3:
+    5:
         if(tx_done) begin 
             $display("simulation ends here: %t\n",$time);
-            $finish;
+            cntFSM<=cntFSM+1;
         end
+    6:
+        if(cntFinish==16'hFFF-1) begin $finish;end
+        else begin cntFinish<=cntFinish+1; end
     endcase
 end
+
+
+//UART Receive.
+wire rx_valid;
+wire [7:0] rx_data;
+ZUART_Rx #(.Freq_divider(12)) myUART_Rx
+(
+	.iClk(clk),
+	.iRstN(rst_n),
+	.iEn(1),
+
+
+	.iRxD(tx_txd),
+	.oValid(rx_valid),
+	.oData(rx_data)
+);
+
+
+//UART Receive Parser.
+wire checkPassed;
+ZUART_Rx_Parse myUART_Rx_Parse
+(
+	.iClk(clk),
+	.iRstN(rst_n),
+	.iEn(1),
+
+
+	.iDataValid(rx_valid),
+	.iData(rx_data),
+
+	.oCheckPassed(checkPassed)
+);
+
 
 //multiplication testing.
 integer fd;
