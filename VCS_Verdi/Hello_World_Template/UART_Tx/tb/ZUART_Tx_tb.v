@@ -69,10 +69,19 @@ end
 
 //multiplication testing.
 integer fd;
+integer fd2;
+reg [7:0] fd2_data[0:31]; 
+integer i;
+
 initial begin
     fd=$fopen("mydata.dat","r");
     if(fd==0) begin
         $display("can't open mydata.dat,quit.\n");
+        $finish;
+    end
+    fd2=$fopen("mydata2.dat","rb");
+    if(fd2==0) begin
+        $display("can't open mydata2.dat,quit.\n");
         $finish;
     end
 end
@@ -81,6 +90,7 @@ reg [7:0] adc1;
 reg [7:0] adc2;
 reg [15:0] adc_multiple;
 reg [7:0] cntFSM2;
+
 always @(posedge clk or negedge rst_n)
 if(!rst_n) begin
     adc1<=0; adc2<=0; cntFSM2<=0; 
@@ -103,8 +113,21 @@ else begin
             cntFSM2<=cntFSM2-3;
         end
     4:
-        begin $fclose(fd); $display("reaches end of file.\n"); cntFSM2<=cntFSM2+1; end
-    5:
+        begin $fclose(fd); $display("reaches end of file."); cntFSM2<=cntFSM2+1; end
+    5: //file format: xxxxxxxxxxxxxxxx (binary mode)
+        begin 
+            $fread(fd2_data,fd2);
+            cntFSM2<=cntFSM2+1;
+        end
+    6:
+        begin 
+            for(i=0;i<32; i++) begin
+                $display("%h", fd2_data[i]);
+            end
+            $fclose(fd2);
+            cntFSM2<=cntFSM2+1;
+        end
+    7:
         begin cntFSM2<=cntFSM2; end
     endcase
 end
