@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// 滑动平均滤波器结构体定义
+// 滑动平均滤波器结构体定义 Moving Average Filter.
 typedef struct {
     double *buffer;      // 保存窗口内的数据
     int size;         // 窗口长度
@@ -34,7 +34,7 @@ typedef struct {
     int count;        // 已存储的数据个数，用于判断是否填满
 } MAFilter;
 
-// 滤波器初始化函数
+//Moving Average Filter.
 MAFilter* MAFilter_init(int window_size) {
     MAFilter *filter = (MAFilter*)malloc(sizeof(MAFilter));
     if (filter == NULL) {
@@ -52,7 +52,7 @@ MAFilter* MAFilter_init(int window_size) {
     return filter;
 }
 
-// 滤波器输入函数
+//Moving Average Filter, remove an old value and add a new value.
 void MAFilter_put(MAFilter *filter, double new_value) {
     if (filter->count < filter->size) {
         filter->count++;
@@ -66,8 +66,7 @@ void MAFilter_put(MAFilter *filter, double new_value) {
         filter->index = 0;
     }
 }
-
-// 输出平均值函数
+//Output the average value of all data in the buffer.
 double MAFilter_get(MAFilter *filter) {
     if (filter->count < filter->size) {
         return filter->sum / filter->count;
@@ -75,7 +74,6 @@ double MAFilter_get(MAFilter *filter) {
     return filter->sum / filter->size;
 }
 
-// 释放资源函数（动态内存版本）
 void MAFilter_free(MAFilter *filter) {
     free(filter->buffer);
     free(filter);
@@ -177,5 +175,6 @@ int main(void)
     free(datModulated);
     free(datDemodulated);
     free(datLPF);
+    MAFilter_free(filter);
     return 0;
 }
