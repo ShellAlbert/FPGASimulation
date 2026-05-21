@@ -84,7 +84,7 @@ int main(void)
 {
     int i;
 
-    MAFilter *filter = MAFilter_init(32);
+    MAFilter *filter = MAFilter_init(11);
     if (filter == NULL) {
         return 1;
     }
@@ -163,7 +163,7 @@ int main(void)
         //subtract -100 to move curve below.
         //fprintf(fp5, "%d %.2f\n", n, datLPF[n]-100);
         //fprintf(fp5, "%d %.2f\n", n, datLPF[n]);
-        fprintf(fp5, "%d %.2f\n", n, datLPF[n]/6);
+        fprintf(fp5, "%d %.2f\n", n, datLPF[n]/8);
     }
     fclose(fp);
     fclose(fp2);
